@@ -7,7 +7,7 @@ import com.dvtp.authservice.domain.entity.User;
 import com.dvtp.authservice.domain.exception.AppException;
 import com.dvtp.authservice.domain.exception.ErrorCode;
 import com.dvtp.authservice.domain.repository.UserRepository;
-import com.dvtp.authservice.infrastructure.security.jwt.JwtProviderImpl;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

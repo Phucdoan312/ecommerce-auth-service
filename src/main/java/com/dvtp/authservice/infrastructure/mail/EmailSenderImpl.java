@@ -72,7 +72,8 @@ public class EmailSenderImpl implements EmailSender {
             log.info("📧 Đã gửi email HTML chứa OTP thành công tới: {}", toEmail);
 
         } catch (Exception e) {
-            log.error("❌ Lỗi khi gửi email tới {}: {}", toEmail, e.getMessage());
+            log.error("❌ Lỗi khi gửi email tới {}: {}", toEmail, e.getMessage(), e);
+            throw new RuntimeException("Gửi email thất bại tới " + toEmail + ": " + e.getMessage(), e);
         }
     }
 }
