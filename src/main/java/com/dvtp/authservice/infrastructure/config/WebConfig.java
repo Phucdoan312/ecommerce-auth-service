@@ -7,14 +7,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // Áp dụng cho tất cả API
+        registry.addMapping("/**")
                 .allowedOrigins(
-                        "http://localhost:5173", // Link Frontend dưới máy (Vite)
-                        "http://localhost:3000", // Link Frontend dưới máy (React cũ)
-                        "https://ten-frontend-cua-ong.vercel.app" // Link Frontend sau khi deploy (nếu có)
+                        "http://localhost:5173", // Link Vite local
+                        "http://localhost:3000"  // Link React cũ
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
