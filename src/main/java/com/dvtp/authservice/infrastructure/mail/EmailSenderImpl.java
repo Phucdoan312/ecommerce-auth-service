@@ -1,35 +1,24 @@
 package com.dvtp.authservice.infrastructure.mail;
 
 import com.dvtp.authservice.application.port.EmailSender;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EmailSenderImpl implements EmailSender {
 
-    private final JavaMailSender javaMailSender;
-
-    @Value("${spring.mail.username}")
-    private String senderEmail;
+    private final String GAS_URL = "https://script.google.com/macros/s/AKfycbwuuC63h_e4OdKBmSm07J4mp5nLJW8AkRAk0tmYhhuEv5Hc0SFqkUr7a6fRQDLZeafm/exec";
 
     @Override
     public void sendOtpEmail(String toEmail, String otpCode) {
         try {
-            MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(senderEmail);
-            helper.setTo(toEmail);
-            helper.setSubject("🔑 Mã Xác Thực (OTP) - E-Commerce");
-
-            // Thay %s bằng {{OTP_CODE}} để tránh đụng độ với dấu % của CSS
+            // Giữ nguyên cái giao diện HTML xịn sò của ông
             String htmlTemplate = """
                     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F0F4F9; padding: 40px 20px; margin: 0;">
                         <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
@@ -66,14 +55,19 @@ public class EmailSenderImpl implements EmailSender {
             // Thay thế chữ {{OTP_CODE}} bằng mã OTP thật
             String htmlContent = htmlTemplate.replace("{{OTP_CODE}}", otpCode);
 
-            helper.setText(htmlContent, true);
+            // BÓP CÒ! Gọi API sang Google Apps Script
+            RestTemplate restTemplate = new RestTemplate();
+            Map<String, String> requestBody = new HashMap<>();
+            requestBody.put("to", toEmail);
+            requestBody.put("subject", "🔑 Mã Xác Thực (OTP) - E-Commerce");
+            requestBody.put("body", htmlContent);
 
-            javaMailSender.send(message);
-            log.info("📧 Đã gửi email HTML chứa OTP thành công tới: {}", toEmail);
+            ResponseEntity<String> response = restTemplate.postForEntity(GAS_URL, requestBody, String.class);
+            log.info("📧 Đã gọi Google Apps Script gửi email OTP tới: {} - Kết quả: {}", toEmail, response.getBody());
 
         } catch (Exception e) {
-            log.error("❌ Lỗi khi gửi email tới {}: {}", toEmail, e.getMessage(), e);
-            throw new RuntimeException("Gửi email thất bại tới " + toEmail + ": " + e.getMessage(), e);
+            log.error("❌ Lỗi khi gọi GAS để gửi email tới {}: {}", toEmail, e.getMessage(), e);
+            throw new RuntimeException("Gửi email qua GAS thất bại tới " + toEmail + ": " + e.getMessage(), e);
         }
     }
 }
