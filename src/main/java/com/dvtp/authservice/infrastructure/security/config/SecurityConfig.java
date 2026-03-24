@@ -33,7 +33,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. THÊM DÒNG NÀY: Kích hoạt cấu hình CORS bên dưới
+                // 1. KÍCH HOẠT CORS: Trỏ xuống cái Bean cấu hình ở dưới cùng
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .csrf(AbstractHttpConfigurer::disable)
@@ -50,30 +50,35 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 2. THÊM BEAN NÀY: Nơi ông chỉ định ai được phép gọi API
+    // 2. CẤU HÌNH CORS CHI TIẾT
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Cho phép cái Frontend 5174 của ông được gọi vào.
-        // (Nếu sau này đem lên mạng thì sửa thành domain thực tế, ví dụ: https://myapp.com)
-        configuration.setAllowedOrigins(List.of("http://localhost:5174","http://localhost:5173"));
+        // Danh sách các Frontend được phép gọi vào Backend (Không có dấu / ở cuối link nhé)
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5173", // Frontend Vite 1 (E-commerce)
+                "http://localhost:5174", // Frontend Vite 2 (Bank Simulator)
+                "http://localhost:3000"  // Frontend React cũ (nếu có)
+                // 🚀 BÍ KÍP: Sau này deploy Frontend lên Vercel/Netlify thì thêm cái link web đó vào đây!
+        ));
 
-        // Cho phép các phương thức GET, POST, PUT, DELETE...
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // Mở cửa cho mọi hành động (GET, POST, PUT, DELETE, OPTIONS...)
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        // Cho phép gửi các Header kèm theo (như Authorization chứa JWT)
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        // Chấp nhận mọi loại Header (bao gồm cả Authorization chứa Token và các Header rườm rà của Axios)
+        configuration.setAllowedHeaders(List.of("*"));
 
-        // Cho phép Frontend đọc các Header từ Backend trả về
+        // Cho phép Frontend lấy được Token từ Backend trả về
         configuration.setExposedHeaders(List.of("Authorization"));
 
-        // Quan trọng nếu sau này ông dùng Cookie
+        // Cho phép gửi kèm Credentials (cực kỳ quan trọng nếu Frontend dùng Axios set withCredentials = true)
         configuration.setAllowCredentials(true);
 
+        // Áp dụng luật này cho tất cả API (từ thư mục gốc /** trở đi)
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Áp dụng luật CORS này cho toàn bộ đường dẫn API
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 }
