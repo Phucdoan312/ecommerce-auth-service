@@ -1,16 +1,16 @@
 package com.dvtp.authservice.application.service;
 
-import com.dvtp.authservice.application.dto.RegisterCommand;// Nhớ đổi tên DTO này theo đúng tên ông đã tạo nhé
+import com.dvtp.authservice.application.dto.RegisterCommand;
 import com.dvtp.authservice.application.dto.RegisterOtpRequestCommand;
 import com.dvtp.authservice.application.dto.UserResponse;
 import com.dvtp.authservice.application.usecase.RegisterUserUseCase;
 import com.dvtp.authservice.domain.constant.RoleConstant;
-import com.dvtp.authservice.domain.entity.Role;
 import com.dvtp.authservice.domain.entity.User;
 import com.dvtp.authservice.domain.exception.AppException;
 import com.dvtp.authservice.domain.exception.ErrorCode;
-import com.dvtp.authservice.domain.repository.RoleRepository;
 import com.dvtp.authservice.domain.repository.UserRepository;
+// 💎 IMPORT THÊM PORT NÀY:
+import com.dvtp.authservice.domain.repository.AppClientRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,9 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class RegisterUserService implements RegisterUserUseCase {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final OtpService otpService;
+    private final AppClientRepository appClientRepository;
 
     @Override
     @Transactional
@@ -42,9 +42,13 @@ public class RegisterUserService implements RegisterUserUseCase {
     @Override
     @Transactional
     public UserResponse register(RegisterCommand command) {
+        appClientRepository.findByClientId(command.clientId())
+                .orElseThrow(() -> new AppException(ErrorCode.VALIDATION_ERROR,
+                        "Register failed: Ứng dụng [" + command.clientId() + "] không tồn tại hoặc chưa đăng ký SSO."));
+
         if(userRepository.existsByUsername(command.username())) {
             throw new AppException(ErrorCode.USER_ALREADY_EXISTS,
-                    "Register failed: User with username [" + command.username() + "already exists.");
+                    "Register failed: User with username [" + command.username() + "] already exists.");
         }
 
         if(userRepository.existsByEmail(command.email())) {
@@ -54,9 +58,6 @@ public class RegisterUserService implements RegisterUserUseCase {
 
         otpService.validateOtp(command.email(), command.otpCode());
 
-        Role userRole = roleRepository.findByName(RoleConstant.USER)
-                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND,
-                        "Role not found: " + RoleConstant.USER));
         User newUser = User.builder()
                 .username(command.username())
                 .email(command.email())
@@ -65,10 +66,13 @@ public class RegisterUserService implements RegisterUserUseCase {
                 .phone(command.phone())
                 .build();
 
-        newUser.addRole(userRole);
+        newUser.addAppRole(command.clientId(), RoleConstant.USER);
+
         User savedUser = userRepository.save(newUser);
 
-        log.info("[AUDIT] User {} registerd successfully with email: {}", savedUser.getUsername(), savedUser.getEmail());
+        log.info("[AUDIT] User {} registered successfully with email: {} for app: {}",
+                savedUser.getUsername(), savedUser.getEmail(), command.clientId());
+
         return UserResponse.fromDomain(savedUser);
     }
 }

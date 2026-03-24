@@ -8,6 +8,7 @@ import lombok.Getter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -25,7 +26,7 @@ public class User {
     private boolean enabled = true;
 
     @Builder.Default
-    private Set<Role> roles = new HashSet<>();
+    private Map<String, Set<String>> appRoles = new java.util.HashMap<>();
 
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -70,7 +71,12 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void addRole(Role role) {
-        this.roles.add(role);
+    public void addAppRole(String clientId, String roleName) {
+        if (this.appRoles == null) {
+            this.appRoles = new java.util.HashMap<>();
+        }
+        this.appRoles.computeIfAbsent(clientId, k -> new HashSet<>()).add(roleName);
+
+        this.updatedAt = LocalDateTime.now();
     }
 }

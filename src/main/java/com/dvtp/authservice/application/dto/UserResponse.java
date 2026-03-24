@@ -2,9 +2,9 @@ package com.dvtp.authservice.application.dto;
 
 import com.dvtp.authservice.domain.entity.User;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public record UserResponse(
         UUID id,
@@ -14,9 +14,9 @@ public record UserResponse(
         String phone,
         boolean enabled,
         boolean dobUpdated,
-        Set<String> roles
+        Map<String, Set<String>> appRoles
 ) {
-    // Factory method để map từ Domain Entity sang Record dễ dàng
+
     public static UserResponse fromDomain(User user) {
         return new UserResponse(
                 user.getId(),
@@ -26,9 +26,7 @@ public record UserResponse(
                 user.getPhone(),
                 user.isEnabled(),
                 user.isDobUpdated(),
-                user.getRoles().stream()
-                        .map(role -> role.getName())
-                        .collect(Collectors.toSet())
+                user.getAppRoles()
         );
     }
 }

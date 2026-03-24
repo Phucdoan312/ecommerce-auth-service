@@ -38,6 +38,7 @@ public class JwtProviderImpl implements JwtTokenProvider {
                 .setSubject(user.getId().toString())
                 .claim("username", user.getUsername())
                 .claim("email", user.getEmail())
+                .claim("app_roles", user.getAppRoles())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -50,7 +51,6 @@ public class JwtProviderImpl implements JwtTokenProvider {
                 .setSubject(user.getId().toString())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
-                // ĐÃ FIX LỖI TYPO Ở ĐÂY: getSigningKey() thay vì getSignInKey()
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

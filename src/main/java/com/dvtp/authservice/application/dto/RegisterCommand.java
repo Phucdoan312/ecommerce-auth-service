@@ -9,6 +9,9 @@ import java.time.LocalDate;
 
 public record RegisterCommand(
 
+        @NotBlank(message = "ClientId không được để trống")
+        String clientId,
+
         @Schema(description = "Tên đăng nhập (duy nhất)", example = "phucdoan")
         @NotBlank(message = "Tên đăng nhập không được để trống")
         @Size(min = 4, max = 20, message = "Tên đăng nhập phải từ 4 đến 20 ký tự")

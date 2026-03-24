@@ -19,18 +19,17 @@ public class OtpTokenJpaEntity {
     private Long id;
 
     @Column(nullable = false)
-    private String email; // Email nhận OTP
+    private String email;
 
     @Column(nullable = false, length = 6)
-    private String otpCode; // Mã OTP (vd: 482912)
+    private String otpCode;
 
     @Column(nullable = false)
-    private LocalDateTime expirationTime; // Thời gian hết hạn (vd: 5 phút sau khi tạo)
+    private LocalDateTime expirationTime;
 
     @Column(nullable = false)
-    private boolean used; // Đánh dấu mã này đã được dùng hay chưa (chống xài lại 1 mã nhiều lần)
+    private boolean used;
 
-    // Hàm tiện ích để kiểm tra mã đã hết hạn chưa
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(this.expirationTime);
     }

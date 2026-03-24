@@ -48,12 +48,7 @@ public class UserJpaEntity extends BaseEntity {
     @Builder.Default
     private boolean dobUpdated = false;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<RoleJpaEntity> roles = new HashSet<>();
+    private Set<UserAppRoleJpaEntity> appRoles = new HashSet<>();
 }

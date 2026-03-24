@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 
 public record LoginCommand(
 
+        @NotBlank(message = "ClientId không được để trống")
+        String clientId,
+
         @Schema(description = "Tên đăng nhập hoặc Email", example = "phucdoan849@gmail.com")
         @NotBlank(message = "Tên đăng nhập hoặc Email không được để trống")
         String usernameOrEmail,
