@@ -6,17 +6,16 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "otp_tokens")
+@Table(
+        name = "otp_tokens",
+        indexes = { @Index(name = "idx_email", columnList = "email") }
+)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OtpTokenJpaEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class OtpTokenJpaEntity extends BaseEntity{
 
     @Column(nullable = false)
     private String email;

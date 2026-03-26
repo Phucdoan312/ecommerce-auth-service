@@ -26,7 +26,7 @@ public record UserResponse(
                 user.getPhone(),
                 user.isEnabled(),
                 user.isDobUpdated(),
-                user.getAppRoles()
+                    user.getAppRoles()
         );
     }
 }

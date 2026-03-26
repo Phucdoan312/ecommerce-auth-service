@@ -45,19 +45,13 @@ public class User {
         if (phone != null && !phone.isBlank()) {
             this.phone = phone;
         }
-
-        // 2. Logic cập nhật ngày sinh (Chỉ cho phép đổi 1 lần duy nhất)
         if (dob != null) {
-            if (this.dobUpdated && !dob.equals(this.dob)) {
+            if (this.dob != null && !this.dob.equals(dob)) {
                 throw new AppException(ErrorCode.VALIDATION_ERROR, "Ngày sinh chỉ được cập nhật duy nhất 1 lần.");
             }
-            if (!this.dobUpdated) {
-                this.dob = dob;
-                this.dobUpdated = true;
-            }
+            this.dob = dob;
         }
 
-        // 3. Luôn cập nhật thời gian chỉnh sửa cuối cùng
         this.updatedAt = LocalDateTime.now();
     }
 
