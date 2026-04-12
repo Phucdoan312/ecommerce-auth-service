@@ -20,14 +20,13 @@ public class UserService implements GetUserProfileUseCase {
 
     private final UserRepository userRepository;
 
-
     @Override
     public UserResponse getMyProfile() {
         String userIdStr = SecurityContextHolder.getContext().getAuthentication().getName();
         UUID userId = UUID.fromString(userIdStr);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "User not found with id: " + userId));
-        log.info("👤 [AUDIT] Truy cập thông tin profile của user: {}", user.getUsername());
+                .orElseThrow(() ->new AppException(ErrorCode.USER_NOT_FOUND, "User not found wit id: " + userId));
+        log.info("[AUDIT] Access user profile information: {}" , user.getUsername());
         return UserResponse.fromDomain(user);
     }
 }

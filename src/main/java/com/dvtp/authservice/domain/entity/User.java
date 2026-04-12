@@ -73,4 +73,10 @@ public class User {
 
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void initializeIdIfNeeded() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
+        }
+    }
 }

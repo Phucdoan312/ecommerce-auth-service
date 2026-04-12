@@ -32,7 +32,7 @@ public class RegisterUserService implements RegisterUserUseCase {
     public void requestOtpForRegister(RegisterOtpRequestCommand command) {
         if(userRepository.existsByEmail(command.email())){
             throw new AppException(ErrorCode.EMAIL_ALREADY_IN_USE,
-                    "OTP request failed: Email [" + command.email() + "] is already in use.");
+                    "Request OTP failed: Email [" + command.email() + "] is already in use.");
         }
         otpService.generateAndSendOtp(command.email());
         log.info("[AUDIT] OTP requested for registration with email: {}", command.email());
