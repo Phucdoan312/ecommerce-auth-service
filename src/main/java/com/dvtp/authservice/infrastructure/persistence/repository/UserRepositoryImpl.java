@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.Set;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,20 +28,66 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     @Transactional
     public User save(User user) {
-        UserJpaEntity jpaEntity = userMapper.toJpaEntity(user);
-        if (jpaEntity.getAppRoles() == null) {
-            jpaEntity.setAppRoles(new HashSet<>());
+        UserJpaEntity jpaEntity;
+        boolean isNew = user.getId() == null;
+
+        if (!isNew) {
+            jpaEntity = jpaRepository.findById(user.getId())
+                    .orElseGet(() -> userMapper.toJpaEntity(user));
+            // Cập nhật thông tin cơ bản từ domain sang JpaEntity (không chạm tới collection roles)
+            userMapper.updateJpaEntity(user, jpaEntity);
         } else {
-            jpaEntity.getAppRoles().clear();
+            jpaEntity = userMapper.toJpaEntity(user);
         }
 
-        if (user.getAppRoles() != null && !user.getAppRoles().isEmpty()) {
-            user.getAppRoles().forEach((clientId, roleNames) -> {
+        // Chỉ xử lý roles nếu JpaEntity chưa có hoặc là user mới
+        // Tuy nhiên để an toàn và giữ logic cũ (cho phép cập nhật roles), ta quản lý collection cẩn thận hơn
+        manageAppRoles(user, jpaEntity);
 
-                AppClientJpaEntity appClient = appClientRepository.findByClientId(clientId)
-                        .orElseThrow(() -> new RuntimeException("Không tìm thấy App Client: " + clientId));
+        UserJpaEntity savedEntity = jpaRepository.save(jpaEntity);
+        return userMapper.toDomain(savedEntity);
+    }
 
-                roleNames.forEach(roleName -> {
+    private void manageAppRoles(User domainUser, UserJpaEntity jpaEntity) {
+        if (domainUser.getAppRoles() == null || domainUser.getAppRoles().isEmpty()) {
+            if (jpaEntity.getAppRoles() != null) {
+                jpaEntity.getAppRoles().clear();
+            }
+            return;
+        }
+
+        // Logic: Giữ lại những role đã có, thêm mới những role chưa có
+        // Xóa những role không còn trong domainUser
+        
+        // 1. Tạo tập hợp các định danh role hiện có trong JPA: "clientId:roleName"
+        Set<String> existingRoleKeys = new HashSet<>();
+        if (jpaEntity.getAppRoles() != null) {
+            jpaEntity.getAppRoles().forEach(ar -> 
+                existingRoleKeys.add(ar.getAppClient().getClientId() + ":" + ar.getRole().getName())
+            );
+        } else {
+            jpaEntity.setAppRoles(new HashSet<>());
+        }
+
+        // 2. Tạo tập hợp các định danh role mới từ Domain
+        Set<String> newRoleKeys = new HashSet<>();
+        domainUser.getAppRoles().forEach((clientId, roles) -> 
+            roles.forEach(roleName -> newRoleKeys.add(clientId + ":" + roleName))
+        );
+
+        // 3. Xóa các role không còn thuộc tập mới
+        jpaEntity.getAppRoles().removeIf(ar -> 
+            !newRoleKeys.contains(ar.getAppClient().getClientId() + ":" + ar.getRole().getName())
+        );
+
+        // 4. Thêm các role mới chưa có trong tập cũ
+        domainUser.getAppRoles().forEach((clientId, roleNames) -> {
+            AppClientJpaEntity appClient = appClientRepository.findByClientId(clientId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy App Client: " + clientId));
+
+            roleNames.forEach(roleName -> {
+                String key = clientId + ":" + roleName;
+                if (!existingRoleKeys.contains(key)) {
                     RoleJpaEntity role = roleRepository.findByName(roleName)
                             .orElseThrow(() -> new RuntimeException("Không tìm thấy Role: " + roleName));
 
@@ -51,12 +98,9 @@ public class UserRepositoryImpl implements UserRepository {
                             .build();
 
                     jpaEntity.getAppRoles().add(userAppRole);
-                });
+                }
             });
-        }
-
-        UserJpaEntity savedEntity = jpaRepository.save(jpaEntity);
-        return userMapper.toDomain(savedEntity);
+        });
     }
 
     @Override

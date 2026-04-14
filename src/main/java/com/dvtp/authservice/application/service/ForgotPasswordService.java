@@ -34,7 +34,13 @@ public class ForgotPasswordService {
         log.info("📩 Đã yêu cầu gửi OTP quên mật khẩu cho: {}", command.email());
     }
 
-    // 2. Xử lý đặt lại mật khẩu
+    // 2. Xác minh OTP (Không hủy OTP)
+    @Transactional(readOnly = true)
+    public void verifyOtp(String email, String otpCode) {
+        otpService.verifyOtpWithoutConsuming(email, otpCode);
+    }
+
+    // 3. Xử lý đặt lại mật khẩu
     @Transactional
     public void resetPassword(ResetPasswordCommand command) {
         // Kiểm tra mật khẩu xác nhận

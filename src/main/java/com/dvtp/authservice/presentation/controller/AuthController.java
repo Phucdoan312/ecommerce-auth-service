@@ -70,7 +70,16 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(null, "Mã OTP đã được gửi đến email của bạn."));
     }
 
-    @Operation(summary = "Quên mật khẩu - Bước 2: Xác nhận OTP và đổi mật khẩu")
+    @Operation(summary = "Quên mật khẩu - Bước 2: Kiểm tra OTP (Không huỷ OTP)")
+    @PostMapping("/forgot-password/verify-otp")
+    public ResponseEntity<ApiResponse<Void>> verifyOtp(
+            @Valid @RequestBody VerifyOtpCommand command) {
+
+        forgotPasswordService.verifyOtp(command.email(), command.otpCode());
+        return ResponseEntity.ok(ApiResponse.success(null, "Mã OTP hợp lệ."));
+    }
+
+    @Operation(summary = "Quên mật khẩu - Bước 3: Xác nhận OTP và đổi mật khẩu")
     @PostMapping("/forgot-password/reset")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
             @Valid @RequestBody ResetPasswordCommand command) {

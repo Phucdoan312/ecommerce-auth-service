@@ -45,6 +45,24 @@ public class OtpService {
 
 
 
+    @Transactional(readOnly = true)
+    public void verifyOtpWithoutConsuming(String email, String otpCode) {
+        OtpTokenJpaEntity otpEntity = otpRepository.findTopByEmailOrderByExpirationTimeDesc(email)
+                .orElseThrow(() -> new AppException(ErrorCode.VALIDATION_ERROR, "Mã OTP không tồn tại."));
+
+        if(otpEntity.isUsed()){
+            throw new AppException(ErrorCode.VALIDATION_ERROR, "Mã OTP đã được sử dụng.");
+        }
+
+        if(otpEntity.isExpired()){
+            throw new AppException(ErrorCode.VALIDATION_ERROR, "Mã OTP đã hết hạn.");
+        }
+
+        if(!otpEntity.getOtpCode().equals(otpCode)){
+            throw new AppException(ErrorCode.VALIDATION_ERROR, "Mã OTP không chính xác.");
+        }
+    }
+
     @Transactional
     public void validateOtp(String email, String otpCode) {
         OtpTokenJpaEntity otpEntity = otpRepository.findTopByEmailOrderByExpirationTimeDesc(email)

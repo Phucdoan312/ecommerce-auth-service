@@ -21,6 +21,9 @@ public interface UserMapper {
     @Mapping(target = "appRoles", ignore = true)
     UserJpaEntity toJpaEntity(User domain);
 
+    @Mapping(target = "appRoles", ignore = true)
+    void updateJpaEntity(User domain, @org.mapstruct.MappingTarget UserJpaEntity entity);
+
     @Named("mapAppRoles")
     default Map<String, Set<String>> mapAppRoles(Set<UserAppRoleJpaEntity> jpaRoles) {
         if (jpaRoles == null || jpaRoles.isEmpty()) {
