@@ -59,8 +59,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173", // Frontend Vite 1 (E-commerce)
                 "http://localhost:5174", // Frontend Vite 2 (Bank Simulator)
-                "http://localhost:3000"  // Frontend React cũ (nếu có)
-                // 🚀 BÍ KÍP: Sau này deploy Frontend lên Vercel/Netlify thì thêm cái link web đó vào đây!
+                "http://localhost:3000",  // Frontend React cũ (nếu có)
+                "https://ecommerce-auth-fe.vercel.app"
         ));
 
         // Mở cửa cho mọi hành động (GET, POST, PUT, DELETE, OPTIONS...)
